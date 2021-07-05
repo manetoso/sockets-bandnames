@@ -4,7 +4,7 @@ import { HomePage } from './HomePage'
 
 export const BandNamesApp = () => {
     return (
-        <SocketProvider serverPath={ 'http://localhost:4000' }>
+        <SocketProvider serverPath={ 'https://socket-bandname-server.herokuapp.com/' }>
             <HomePage />
         </SocketProvider>
     )
