@@ -1,12 +1,21 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
+import { SocketContext } from '../context/SocketContext'
 
-export const BandList = ({ data, vote, deleteBand, changeName }) => {
+import { AiOutlinePlusCircle, AiOutlineMinusCircle } from 'react-icons/ai';
+import { FaTrashAlt } from 'react-icons/fa';
 
-    const [bands, setBands] = useState(data)
+export const BandList = () => {
 
+    const [bands, setBands] = useState([])
+    const { socket } = useContext( SocketContext )
+
+    //--CHECK MESSAGE current-band FORM SOCKET
     useEffect(() => {
-        setBands( data )
-    }, [ data ])
+        socket.on( 'current-band', ( bands ) => {
+            setBands( bands )
+        })
+        return () => socket.off( 'current-band' )
+    }, [ socket ])
 
     const nameChanged = ( event, id ) => {
         const newName = event.target.value
@@ -18,8 +27,27 @@ export const BandList = ({ data, vote, deleteBand, changeName }) => {
         }))
     }
 
-    const onLostFocus = ( id, name ) => {
-        console.log( id, name ) 
+    //--SOCKET EMIT TO CHANGE THE BAND NAME
+    const changeBandName = ( id, name ) => {
+        socket.emit( 'change-band-name', {
+            id,
+            name
+        })
+    }
+
+    //--SOCKET EMIT TO VOTE THE BAND
+    const voteBand = ( id ) => {
+        socket.emit( 'vote-band', id )
+    }
+
+    //--SOCKET EMIT TO CANCEL THE VOTE FOR BAND
+    const unvoteBand = ( id ) => {
+        socket.emit( 'unvote-band', id )
+    }
+
+    //--SOCKET EMIT TO DELETE THE BAND
+    const deleteBand = ( id ) => {
+        socket.emit( 'delete-band', id )
     }
 
     const createRows = () => {
@@ -28,18 +56,23 @@ export const BandList = ({ data, vote, deleteBand, changeName }) => {
                 <tr key={ band.id }>
                     <td>
                         <button
-                            className="btn btn-dark"
-                            onClick={ () => vote( band.id ) }
+                            className="btn btn-dark me-2 mt-2"
+                            onClick={ () => voteBand( band.id ) }
                         >
-                            +1 
+                            <AiOutlinePlusCircle style={{ marginBottom: '1px', fontSize: '23px' }} />
+                        </button>
+                        <button
+                            className="btn btn-dark mt-2"
+                            onClick={ () => unvoteBand( band.id ) }
+                        >
+                            <AiOutlineMinusCircle style={{ marginBottom: '1px', fontSize: '23px' }} />
                         </button>
                     </td>
                     <td>
                         <form
                             onSubmit={ ( e ) => {
                                 e.preventDefault()
-                                onLostFocus( band.id, band.name )
-                                changeName( band.id, band.name )
+                                changeBandName( band.id, band.name )
                             }}
                         >
                             <input
@@ -55,7 +88,7 @@ export const BandList = ({ data, vote, deleteBand, changeName }) => {
                             className="btn btn-outline-danger"
                             onClick={ () => deleteBand( band.id ) }
                         >
-                            Borrar
+                            <FaTrashAlt style={{ marginBottom: '5px' }} /> Borrar
                         </button>
                     </td>
                 </tr>
